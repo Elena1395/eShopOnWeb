@@ -1,14 +1,30 @@
 version: '3.4'
-
 services:
-  eshopwebmvc:
-    image: ${DOCKER_REGISTRY-}eshopwebmvc
-    build:
+ eshopwebmvc:
+   image: regeshoponweb.azurecr.io/web22
+   build:
       context: .
       dockerfile: src/Web/Dockerfile
-  eshoppublicapi:
-    image: ${DOCKER_REGISTRY-}eshoppublicapi
-    build:
+   container_name: web
+   environment:
+     - ASPNETCORE_ENVIRONMENT=Docker
+     - ASPNETCORE_URLS=http://+:80
+   ports:
+     - "5106:80"
+   volumes:
+     - ~/.aspnet/https:/root/.aspnet/https:ro
+     - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+ eshoppublicapi:
+   image: regeshoponweb.azurecr.io/api22
+   build:
       context: .
       dockerfile: src/PublicApi/Dockerfile
-
+   container_name: api
+   environment:
+     - ASPNETCORE_ENVIRONMENT=Docker
+     - ASPNETCORE_URLS=http://+:80
+   ports:
+     - "5200:80"
+   volumes:
+     - ~/.aspnet/https:/root/.aspnet/https:ro
+     - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro

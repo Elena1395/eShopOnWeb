@@ -1,5 +1,9 @@
 {
     "IsEncrypted": false,
-    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=eshoporderstorage;AccountKey=RWLGErnUXQTS0A1t0bnTZFFmIZCNz+gwt5trif2kLOJBqKCw3ltlb+LembavTrmrNbcncuEyA1orJjyxEXhGZQ==;BlobEndpoint=https://eshoporderstorage.blob.core.windows.net/;TableEndpoint=https://eshoporderstorage.table.core.windows.net/;QueueEndpoint=https://eshoporderstorage.queue.core.windows.net/;FileEndpoint=https://eshoporderstorage.file.core.windows.net/",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet"
-}
+  "Values": {
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=orderitemsreserver202111;AccountKey=GjA0pkvIjz0s2v9qmX87aoXI/nXlCd+qF2deC39OBxxGRfoavj/TrxuPvZGFpTR4s6KimawU0xP4hqt+ip3vnA==;EndpointSuffix=core.windows.net",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "PrimaryKey": "wpJ8Nt1sjYDbfPrSbV9tPE5gyYmrxxkIzDSNBeERZJJ9d8rGj3CUP5nUDrga8xz1nprAq5AhIAwzQxpndNExrQ==",
+    "EndpointUri": "https://cosmondb.documents.azure.com:443/"
+  }
+} 

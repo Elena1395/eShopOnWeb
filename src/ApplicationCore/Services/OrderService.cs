@@ -1,10 +1,15 @@
 ﻿using Ardalis.GuardClauses;
+using Azure.Messaging.ServiceBus;
 using Microsoft.eShopWeb.ApplicationCore.Entities;
 using Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate;
 using Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate;
 using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 using Microsoft.eShopWeb.ApplicationCore.Specifications;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Microsoft.eShopWeb.ApplicationCore.Services
@@ -27,7 +32,7 @@ namespace Microsoft.eShopWeb.ApplicationCore.Services
             _itemRepository = itemRepository;
         }
 
-        public async Task CreateOrderAsync(int basketId, Address shippingAddress)
+        public async Task<bool> CreateOrderAsyncAndTriggerFunction(int basketId, Address shippingAddress, IConfiguration configuration)
         {
             var basketSpec = new BasketWithItemsSpecification(basketId);
             var basket = await _basketRepository.FirstOrDefaultAsync(basketSpec);
@@ -49,6 +54,75 @@ namespace Microsoft.eShopWeb.ApplicationCore.Services
             var order = new Order(basket.BuyerId, shippingAddress, items);
 
             await _orderRepository.AddAsync(order);
+            //_configuration.GetSection("FuncUrl").Value, _configuration.GetSection("FuncKey").Value
+            //return PutOrderToblobStorage(order, configuration.GetSection("BlobFuncUrl").Value, configuration.GetSection("BlobFuncKey").Value);
+            //return PutOrderToCosmosStorage(order, configuration.GetSection("CosmosFuncUrl").Value, configuration.GetSection("CosmosFuncKey").Value);
+            //PutOrderToblobStorage(order, configuration.GetSection("BlobFuncUrl").Value, configuration.GetSection("BlobFuncKey").Value);
+            //PutOrderToblobStorage(order, configuration.GetSection("BlobFuncUrl").Value, configuration.GetSection("BlobFuncKey").Value);
+            PutOrderToCosmosStorage(order, configuration.GetSection("CosmosFuncUrl").Value, configuration.GetSection("CosmosFuncKey").Value);
+            await PutOrderToQueue(order, configuration.GetSection("ServiceBusCon").Value, configuration.GetSection("QueueName").Value);
+            return true;
+        }
+
+        private async Task PutOrderToQueue(Order order, string connectionString, string queueName) {
+            var client = new ServiceBusClient(connectionString);
+            var sender = client.CreateSender(queueName);
+            using ServiceBusMessageBatch messageBatch = await sender.CreateMessageBatchAsync();
+
+            string json = JsonSerializer.Serialize(order);
+            messageBatch.TryAddMessage(new ServiceBusMessage(json));
+
+            try
+            {
+                // Use the producer client to send the batch of messages to the Service Bus queue
+                await sender.SendMessagesAsync(messageBatch);
+            }
+            finally
+            {
+                // Calling DisposeAsync on client types is required to ensure that network
+                // resources and other unmanaged objects are properly cleaned up.
+                await sender.DisposeAsync();
+                await client.DisposeAsync();
+            }
+        }
+
+        private bool PutOrderToCosmosStorage(Order order, string funcUrl, string funcKey)
+        {
+
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create($"{funcUrl}?code={funcKey}");
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "POST";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = JsonSerializer.Serialize(order);
+                streamWriter.Write(json);
+            }
+            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+            if (httpResponse.StatusCode == HttpStatusCode.OK)
+            {
+                return true;
+            }
+            return false;
+        }
+        private bool PutOrderToblobStorage(Order order, string funcUrl, string funcKey) {
+
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create($"{funcUrl}?code={funcKey}");
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "POST";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json =  JsonSerializer.Serialize(order);
+                streamWriter.Write(json);
+            }
+            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+
+            if (httpResponse.StatusCode == HttpStatusCode.OK) {
+                return true;
+            }
+            return false;
         }
     }
 }
