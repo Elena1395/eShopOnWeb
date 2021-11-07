@@ -1,0 +1,5 @@
+{
+    "IsEncrypted": false,
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=eshoporderstorage;AccountKey=RWLGErnUXQTS0A1t0bnTZFFmIZCNz+gwt5trif2kLOJBqKCw3ltlb+LembavTrmrNbcncuEyA1orJjyxEXhGZQ==;BlobEndpoint=https://eshoporderstorage.blob.core.windows.net/;TableEndpoint=https://eshoporderstorage.table.core.windows.net/;QueueEndpoint=https://eshoporderstorage.queue.core.windows.net/;FileEndpoint=https://eshoporderstorage.file.core.windows.net/",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet"
+}
